@@ -74,19 +74,19 @@ fig, axs = plt.subplots(nrows=3, ncols=3, figsize=(20, 15))
 
 # errorbar = None
 col = 0
-plot_folder("../results/linreg/first/", axs[0,col], toprow=True, keep_legend=True)
-plot_folder("../results/linreg/max/", axs[1,col], toprow=False)
-plot_folder("../results/linreg/kendall/", axs[2,col], toprow=False)
+plot_folder("results/linreg/first/", axs[0,col], toprow=True, keep_legend=True)
+plot_folder("results/linreg/max/", axs[1,col], toprow=False)
+plot_folder("results/linreg/kendall/", axs[2,col], toprow=False)
 
 col+=1
-plot_folder("../results/poisson/first/", axs[0,col], toprow=True)
-plot_folder("../results/poisson/max/", axs[1,col], toprow=False)
-plot_folder("../results/poisson/kendall/", axs[2,col], toprow=False)
+plot_folder("results/poisson/first/", axs[0,col], toprow=True)
+plot_folder("results/poisson/max/", axs[1,col], toprow=False)
+plot_folder("results/poisson/kendall/", axs[2,col], toprow=False)
 
 col+=1
-plot_folder("../results/beta/first/", axs[0,col], toprow=True)
-plot_folder("../results/beta/max/", axs[1,col], toprow=False)
-plot_folder("../results/beta/kendall/", axs[2,col], toprow=False)
+plot_folder("results/beta/first/", axs[0,col], toprow=True)
+plot_folder("results/beta/max/", axs[1,col], toprow=False)
+plot_folder("results/beta/kendall/", axs[2,col], toprow=False)
 
 plt.tight_layout()
 plt.savefig("simul_fig.pdf", bbox_inches='tight')
