@@ -118,7 +118,7 @@ class VarBernMF(VarMFSelector):
         return(idx)
 
 class VarNormMF(VarMFSelector):
-    def __init__(self, n_samples:int, sigma:float, **kwargs):
+    def __init__(self, n_samples:int, **kwargs):
         self.n_samples = n_samples
 
     def select(self, model:BayesNormMFModel, index_pairs:list, **kwargs)->int:
