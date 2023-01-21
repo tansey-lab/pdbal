@@ -324,7 +324,7 @@ class DBALNormMF(DBALMFSelector):
         for i, (ii,jj) in enumerate(index_pairs):
             ll_group[:, i] = np.sum( ll[:, ii, jj] )
 
-        scores = logsumexp(ll + log_triple_dists, axis=0)
+        scores = logsumexp(ll_group + log_triple_dists, axis=0)
 
         ## Choose minimizer
         idx = np.argmin(scores)
