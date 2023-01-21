@@ -46,8 +46,8 @@ class BayesianMFModel(object):
 
     def update(self, ii_new:np.ndarray, jj_new:np.ndarray, y_new:np.ndarray, **kwargs):
         self.ii.extend(ii_new)
-        self.jj.append(jj_new)
-        self.y.append(y_new)
+        self.jj.extend(jj_new)
+        self.y.extend(y_new)
 
     def eval(self, n:int, W:np.ndarray, V:np.ndarray, prod:np.ndarray, distance:MFDistance, **kwargs):
         W_list, V_list = self.sample(n)
@@ -75,7 +75,7 @@ class PyStanMFModel(BayesianMFModel):
         raise NotImplementedError
 
     def sample(self, n:int):
-        if len(self.X) == 0:
+        if len(self.y) == 0:
             W = np.random.standard_normal(size=(n, self.n_rows, self.n_features))
             V = np.random.standard_normal(size=(n, self.n_cols, self.n_features))
         else:
