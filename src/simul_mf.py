@@ -173,8 +173,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Simulation arguments')
     parser.add_argument('--seed', type=int, default=100, help="The random seed.")
     parser.add_argument('--obj', type=str, default='mse', help="The objective we use.")
-    parser.add_argument('--mode', type=str, default='bern', help="The model we use.")
-    parser.add_argument('--n_rows', type=int, default=10, help="Number of matrix rows.")
+    parser.add_argument('--mode', type=str, default='norm', help="The model we use.")
+    
+    parser.add_argument('--n_rows', type=int, default=30, help="Number of matrix rows.")
     parser.add_argument('--n_cols', type=int, default=20, help="Number of matrix cols.")
     parser.add_argument('--n_features', type=int, default=3, help="Dimensionality of embeddings.")
     parser.add_argument('--bsize', type=int, default=5, help="Size of row/col groupings.")
