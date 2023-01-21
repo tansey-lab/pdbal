@@ -2,7 +2,7 @@ import abc
 import numpy as np
 from scipy.special import expit
 from reg_models import BayesianModel, BayesLogisticRegression, BayesPoissonRegression, BayesBetaRegression, BayesLinearRegression
-from mf_models import BayesianMFModel, BayesBernMFModel
+from mf_models import BayesianMFModel, BayesBernMFModel, BayesNormMFModel
 
 def var_outcome(conditional_means:np.ndarray, conditional_variances:np.ndarray)->int:
 
@@ -113,7 +113,22 @@ class VarBernMF(VarMFSelector):
 
         conditional_variances = pos_probs * (1.0-pos_probs)
 
-
         idx = var_mf_outcome(conditional_means=pos_probs, conditional_variances=conditional_variances, index_pairs=index_pairs)
 
+        return(idx)
+
+class VarNormMF(VarMFSelector):
+    def __init__(self, n_samples:int, sigma:float, **kwargs):
+        self.n_samples = n_samples
+
+    def select(self, model:BayesNormMFModel, index_pairs:list, **kwargs)->int:
+        W_list, V_list = model.sample(self.n_samples)
+
+        conditional_means = np.einsum('tik, tjk -> tij', W_list, V_list) ## n x dim1 x dim2
+        
+        variances = np.var(conditional_means, axis=0)
+
+        group_variances = [np.sum(variances[ii, jj])  for ii,jj in index_pairs]
+
+        idx = np.argmax(group_variances)
         return(idx)

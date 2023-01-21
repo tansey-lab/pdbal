@@ -1,9 +1,9 @@
 import numpy as np
-from dbal import DBALMFSelector, DBALBernMF
-from eig import EIGMFSelector, EIGBernMF
-from var import VarMFSelector, VarBernMF
+from dbal import DBALMFSelector, DBALBernMF, DBALNormMF
+from eig import EIGMFSelector, EIGBernMF, EIGNormMF
+from var import VarMFSelector, VarBernMF, VarNormMF
 from dists import MFDistance, MFMSEDistance
-from mf_models import BayesianMFModel, BayesBernMFModel
+from mf_models import BayesianMFModel, BayesBernMFModel, BayesNormMFModel
 from copy import deepcopy
 from numpy.linalg import norm
 from scipy.special import expit
@@ -216,6 +216,11 @@ if __name__ == "__main__":
         eig_selector = EIGBernMF(n_samples=n_samples)
         dbal_selector = DBALBernMF(**dbal_kwargs)
         var_selector = VarBernMF(n_samples=n_samples)
+    elif mode == 'norm':
+        model = BayesNormMFModel(n_rows=n_rows, n_cols=n_cols, n_features=n_features, sigma=stdv)
+        eig_selector = EIGNormMF(n_samples=n_samples, sigma=stdv)
+        dbal_selector = DBALNormMF(**dbal_kwargs)
+        var_selector = VarNormMF(n_samples=n_samples)
 
     result = active_mf(distribution=distribution, 
                                dbal_selector=dbal_selector, 

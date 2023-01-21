@@ -4,7 +4,39 @@ from numpy.linalg import multi_dot
 from dists import MFDistance
 import stan 
 
-bern_fm = """
+
+norm_mf = """
+data {
+    int<lower=1> n_rows;                              // Number of rows
+    int<lower=1> n_cols;                              // Number of columns
+    int<lower=1> n_features;                          // Number of features 
+    int<lower=1> n_entries;                           // Number of entries in matrix 
+    real<lower=0> sigma;
+    array[n_entries] int<lower=1,upper=n_rows> ii;    // Row indices
+    array[n_entries] int<lower=1,upper=n_cols> jj;    // Col indices
+    array[n_entries] real y;                          // observations (force int) 
+}
+parameters {
+    matrix[n_rows, n_features] W;         
+    matrix[n_cols, n_features] V;
+}
+
+model {
+    for (n in 1:n_entries) {
+            y[n] ~ normal( dot_product(W[ii[n],:], V[jj[n],:]) , sigma);
+    }
+
+    for (n in 1:n_cols) {
+        V[n,:] ~  std_normal();
+    }
+    for (n in 1:n_rows) {
+        W[n,:] ~ std_normal();
+    }
+}
+"""
+
+
+bern_mf = """
 data {
     int<lower=1> n_rows;                              // Number of rows
     int<lower=1> n_cols;                              // Number of columns
@@ -91,15 +123,13 @@ class PyStanMFModel(BayesianMFModel):
         return(W, V)
 
 
-###########################
-#### PyStan implementation
-###########################
+
 class BayesBernMFModel(PyStanMFModel):        
     def __init__(self, n_rows:int, n_cols:int, n_features:int, **kwargs):
         super().__init__(n_rows=n_rows, n_cols=n_cols, n_features=n_features)
 
     def get_model_code(self):
-        return(bern_fm)
+        return(bern_mf)
 
     def get_dataset(self):
         ii = np.array(self.ii).astype(int)
@@ -108,3 +138,20 @@ class BayesBernMFModel(PyStanMFModel):
         n_entries = len(ii)
         dataset = {"n_rows":self.n_rows, "n_cols":self.n_cols, "n_features":self.n_features, "n_entries":n_entries, "ii":(ii+1), "jj":(jj+1), "y":y}
         return(dataset)
+
+class BayesNormMFModel(PyStanMFModel):        
+    def __init__(self, n_rows:int, n_cols:int, n_features:int, sigma:float, **kwargs):
+        super().__init__(n_rows=n_rows, n_cols=n_cols, n_features=n_features)
+        self.sigma = sigma
+
+    def get_model_code(self):
+        return(norm_mf)
+
+    def get_dataset(self):
+        ii = np.array(self.ii).astype(int)
+        jj = np.array(self.jj).astype(int)
+        y = np.array(self.y).astype(int)
+        n_entries = len(ii)
+        dataset = {"n_rows":self.n_rows, "n_cols":self.n_cols, "n_features":self.n_features, "n_entries":n_entries, "sigma":self.sigma, "ii":(ii+1), "jj":(jj+1), "y":y}
+        return(dataset)
+

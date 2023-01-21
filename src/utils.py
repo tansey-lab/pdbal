@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.special import betaln, digamma
-from scipy.stats import beta
+from scipy.stats import beta, norm
 from scipy.special import xlogy
 from scipy.integrate import simpson
 
@@ -18,7 +18,7 @@ def poisson_probs(lams:np.ndarray, K:int=10):
     return(probs)
 
 
-def beta_probs(a:np.ndarray, b:np.ndarray, K:int=25):
+def beta_probs(a:np.ndarray, b:np.ndarray, K:int=10):
     n,m = a.shape
     x = np.linspace(0.001,0.999,num=K)
     Y = np.empty((n, m, K))
@@ -36,3 +36,10 @@ def continuous_entropy(Y:np.ndarray, x:np.ndarray, axis=-1):
     entr = simpson(neg_ylogy, x, axis=axis)
     return(entr)
     
+def norm_probs(mu:np.ndarray, sigma:float, K:int=10):
+    low = np.min(mu) - 2*sigma
+    high = np.max(mu) + 2*sigma
+    x = np.linspace(low, high, num=K)
+    
+    Y = np.stack([ norm.pdf(a, loc=mu, scale=sigma) for a in x ], axis=-1)
+    return(Y, x)

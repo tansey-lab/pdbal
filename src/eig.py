@@ -2,9 +2,9 @@ import abc
 import numpy as np
 from scipy.special import expit
 from scipy.stats import entropy
-from mf_models import BayesianMFModel, BayesBernMFModel
+from mf_models import BayesianMFModel, BayesBernMFModel, BayesNormMFModel
 from reg_models import BayesianModel, BayesBetaRegression, BayesLinearRegression, BayesLogisticRegression, BayesPoissonRegression
-from utils import poisson_probs, beta_probs, continuous_entropy, beta_entropy
+from utils import poisson_probs, beta_probs, continuous_entropy, beta_entropy, norm_probs
 
 ## probs: num samples x num queries x num outcomes 
 def eig_finite_outcome(probs:np.ndarray)->int:
@@ -150,4 +150,26 @@ class EIGBernMF(EIGMFSelector):
         probs[:,:,:,1] = 1.0-pos_probs
 
         idx = eig_mf_finite_outcome(probs, index_pairs)
+        return(idx)
+
+
+class EIGNormMF(EIGMFSelector):
+    def __init__(self, n_samples:int, sigma:float, **kwargs):
+        self.n_samples = n_samples
+        self.sigma = sigma
+
+    def select(self, model:BayesNormMFModel, index_pairs:list, **kwargs)->int:
+        W_list, V_list = model.sample(self.n_samples)
+
+        mu = np.einsum('tik, tjk -> tij', W_list, V_list) ## n x dim1 x dim2
+        
+        probs, x = norm_probs(mu, self.sigma)  ## n x dim1 x dim2 x O
+
+
+        marginal_probs = np.mean(probs, axis=0) ## dim1 x dim2 x O
+        marginal_entropies = continuous_entropy(marginal_probs, x, axis=-1) ## dim1 x dim2
+
+        group_ents = [np.sum(marginal_entropies[ii,jj]) for ii,jj in index_pairs]
+
+        idx = np.argmax(group_ents)
         return(idx)
