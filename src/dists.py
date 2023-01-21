@@ -79,3 +79,34 @@ class CoordInfluenceDistance(Distance):
         v = np.dot(self.X_coords, x[self.coords])
         avg_dist = np.mean( cdist(V,v[np.newaxis, :], metric=self.distance))
         return(avg_dist)
+
+
+class MFDistance():
+    __metaclass__ = abc.ABCMeta
+    def __init__(self, **kwargs):
+        return
+    
+    def distance(self, W1:np.ndarray, V1:np.ndarray, prod1:np.ndarray,  W2:np.ndarray, V2:np.ndarray, prod2:np.ndarray):
+        raise NotImplementedError
+
+    def square_form(self, W_list:np.ndarray, V_list:np.ndarray, prod_list:np.ndarray):
+        N = W_list.shape[0]
+        M = np.empty((N,N))
+        for i in range(1,N):
+            for j in range(i):
+                M[i,j] = self.distance(W_list[i], V_list[i], prod_list[i], W_list[j], V_list[j], prod_list[j])
+        return(M)
+
+    def average_distance(self, W_list:np.ndarray, V_list:np.ndarray, prod_list:np.ndarray,  W:np.ndarray, V:np.ndarray, prod:np.ndarray):
+        N = W_list.shape[0]
+        avg_dist = np.mean( [self.distance(W_list[i], V_list[i], prod_list[i], W,V,prod) for i in range(N)  ])
+        return(avg_dist)
+
+
+class MFMSEDistance(MFDistance):
+    def __init__(self):
+        super().__init__()
+
+    def distance(self, W1:np.ndarray, V1:np.ndarray, prod1:np.ndarray,  W2:np.ndarray, V2:np.ndarray, prod2:np.ndarray):
+        dist = np.mean(np.square(prod1 - prod2))
+        return(dist)

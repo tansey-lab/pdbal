@@ -3,8 +3,9 @@ import numpy as np
 from scipy.special import logsumexp, comb, expit
 from scipy.stats import entropy
 from scipy.integrate import simpson
-from dists import Distance
-from models import BayesianModel, BayesLogisticRegression, BayesPoissonRegression, BayesBetaRegression, BayesLinearRegression
+from dists import Distance, MFDistance
+from reg_models import BayesianModel, BayesLogisticRegression, BayesPoissonRegression, BayesBetaRegression, BayesLinearRegression
+from mf_models import BayesianMFModel, BayesBernMFModel
 from utils import poisson_probs, beta_probs, beta_entropy
 
 ## Flatten tuples
@@ -211,4 +212,89 @@ class DBALBetaRegression(DBALSelector):
         
         idx = dbal_continuous_outcomes(probs=probs, x=x, log_triple_dists=log_triple_dists, idx1=idx1, idx2=idx2, idx3=idx3)
 
+        return(idx)
+
+
+
+## probs: num samples x dim1 x dim2 x num outcomes
+## log_triple_dists: len of (idx1, idx2, idx3) x num samples
+def dbal_mf_finite_outcomes(probs:np.ndarray, log_triple_dists:np.ndarray, idx1:np.ndarray, idx2:np.ndarray, idx3:np.ndarray, index_pairs:list):
+    log_triple_likelihood = np.log(np.sum(probs[idx1,:,:]*probs[idx2,:,:]*probs[idx3,:,:], axis=-1)) ## n_triples x dim1 x dim2
+    n = len(idx1)
+    m = len(index_pairs)
+    log_triple_group_likelihood = np.empty((n, m))
+    for i, (ii,jj) in enumerate(index_pairs):
+        log_triple_group_likelihood[:, i] = np.sum( log_triple_likelihood[:, ii, jj] )
+
+    scores = logsumexp(log_triple_group_likelihood + log_triple_dists, axis=0)
+    return(np.argmin(scores))
+
+class DBALMFSelector():
+    __metaclass__ = abc.ABCMeta
+    def __init__(self, n_samples:int, dist:MFDistance, max_triples:int=1000,  dfactor:float=1.0, **kwargs):
+        self.n_samples = n_samples
+        self.dist = dist
+        self.max_triples = max_triples
+        self.dfactor = dfactor
+        self.entropy_adjust = True
+
+    def select(self, model:BayesianMFModel, index_pairs:list, **kwargs)->int:
+        raise NotImplementedError
+
+    def sample_indices(self):
+        ncombs = comb(self.n_samples, 3, exact=True)
+        n_triples = min(ncombs, self.max_triples)
+        unpacked_indices = np.random.choice(ncombs, size=n_triples, replace=False)
+        idx1, idx2, idx3 = zip(*[combination_lookup(ind, self.n_samples, 3) for ind in unpacked_indices])
+        return(idx1, idx2, idx3)
+
+    def calc_log_triple_dists(self, W_list, V_list, prod_list, idx1, idx2, idx3, entropies=None):
+        ## Calculate distance matrix
+        dists = self.dist.square_form(W_list, V_list, prod_list)
+
+        d12 = dists[idx1, idx2]
+        d23 = dists[idx2, idx3]
+        d13 = dists[idx1, idx3]
+        if self.entropy_adjust:
+            assert entropies is not None, "entropy adjustment selected, but no model entropies provided."
+            exp_entropies = np.exp(2*entropies)
+            triple_dists = exp_entropies[idx3,:]*d12[:,np.newaxis] + exp_entropies[idx2,:]*d13[:,np.newaxis] + exp_entropies[idx1,:]*d23[:,np.newaxis]
+        else:
+            triple_dists = d12 + d23 + d13
+            triple_dists = triple_dists[:, np.newaxis]
+        
+        ## Handle 0 values
+        with np.errstate(divide='ignore'):
+            log_triple_dists = self.dfactor*np.log(triple_dists)
+        
+        return(log_triple_dists)
+
+
+
+class DBALBernMF(DBALMFSelector):
+    def __init__(self, n_samples:int, dist:MFDistance, max_triples:int=1000,  dfactor:float=1.0, **kwargs):
+        super().__init__(n_samples, dist, max_triples, dfactor, **kwargs)
+
+    
+    def select(self, model: BayesianMFModel, index_pairs: list, **kwargs) -> int:
+        W_list, V_list = model.sample(self.n_samples)
+        prod_list = np.einsum('tik, tjk -> tij', W_list, V_list)
+        
+        _, dim1, dim2 = prod_list.shape
+
+        probs = np.empty((self.n_samples, dim1, dim2, 2))
+        probs[:,:,:,0] = expit(prod_list)
+        probs[:,:,:,1] = 1.0-probs[:,:,:,0]
+
+        ## Subsample indices
+        idx1, idx2, idx3 = self.sample_indices()
+
+        ## Entropy adjustment
+        entropies = None
+        if self.entropy_adjust:
+            entropies = entropy(probs, axis=-1)
+
+        log_triple_dists = self.calc_log_triple_dists(W_list, V_list, prod_list, idx1, idx2, idx3, entropies=entropies)
+
+        idx = dbal_mf_finite_outcomes(probs=probs, log_triple_dists=log_triple_dists, idx1=idx1, idx2=idx2, idx3=idx3, index_pairs=index_pairs)
         return(idx)

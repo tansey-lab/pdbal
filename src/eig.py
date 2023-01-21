@@ -2,10 +2,11 @@ import abc
 import numpy as np
 from scipy.special import expit
 from scipy.stats import entropy
-from models import BayesianModel, BayesLogisticRegression, BayesPoissonRegression, BayesBetaRegression, BayesLinearRegression
+from mf_models import BayesianMFModel, BayesBernMFModel
+from reg_models import BayesianModel, BayesBetaRegression, BayesLinearRegression, BayesLogisticRegression, BayesPoissonRegression
 from utils import poisson_probs, beta_probs, continuous_entropy, beta_entropy
 
-# ## probs: num samples x num queries x num outcomes 
+## probs: num samples x num queries x num outcomes 
 def eig_finite_outcome(probs:np.ndarray)->int:
     n, m, O = probs.shape 
     marginal_probs = np.mean(probs, axis=0) ## m x O
@@ -104,3 +105,49 @@ class EIGBetaRegression(EIGSelector):
         return(idx)
 
 
+
+
+## Matrix-arranged queries are dim1 x dim2
+## probs: num samples x dim1 x dim2 x num outcomes 
+def eig_mf_finite_outcome(probs:np.ndarray, index_pairs:list)->int:
+    n, dim1, dim2, O = probs.shape 
+    marginal_probs = np.mean(probs, axis=0) ## dim1 x dim2 x O
+    marginal_entropies = entropy(marginal_probs, axis=-1) ## dim1 x dim2
+
+    model_entropies = entropy(probs, axis=-1) ## n x dim1 x dim2
+    conditional_entropies = np.mean(model_entropies, axis=0) ## dim1 x dim2
+
+    objective = marginal_entropies - conditional_entropies
+
+    indexed_obj = [np.sum( objective[ii,jj]) for ii,jj in index_pairs]
+
+    return(np.argmax(indexed_obj))
+
+
+
+class EIGMFSelector():
+    __metaclass__ = abc.ABCMeta
+    def __init__(self, n_samples:int, **kwargs):
+        self.n_samples = n_samples
+    
+    def select(self, model:BayesianMFModel, index_pairs:list, **kwargs)->int:
+        raise NotImplementedError
+
+
+class EIGBernMF(EIGMFSelector):
+    def __init__(self, n_samples:int, **kwargs):
+        self.n_samples = n_samples
+    
+    def select(self, model:BayesBernMFModel, index_pairs:list, **kwargs)->int:
+        W_list, V_list = model.sample(self.n_samples)
+
+        pos_probs = expit(np.einsum('tik, tjk -> tij', W_list, V_list))
+        
+        _, dim1, dim2 = pos_probs.shape
+
+        probs = np.empty((self.n_samples, dim1, dim2, 2))
+        probs[:,:,:,0] = pos_probs
+        probs[:,:,:,1] = 1.0-pos_probs
+
+        idx = eig_mf_finite_outcome(probs, index_pairs)
+        return(idx)

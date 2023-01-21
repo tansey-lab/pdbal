@@ -1,8 +1,8 @@
 import abc
 import numpy as np
 from scipy.special import expit
-from models import BayesianModel, BayesLogisticRegression, BayesPoissonRegression, BayesBetaRegression, BayesLinearRegression
-
+from reg_models import BayesianModel, BayesLogisticRegression, BayesPoissonRegression, BayesBetaRegression, BayesLinearRegression
+from mf_models import BayesianMFModel, BayesBernMFModel
 
 def var_outcome(conditional_means:np.ndarray, conditional_variances:np.ndarray)->int:
 
@@ -81,5 +81,39 @@ class VarBetaRegression(VarSelector):
         ## probs: n, m, K
         conditional_variances = a*b/(np.square(a + b) * (1. + a + b))
         idx = var_outcome(conditional_means=mu, conditional_variances=conditional_variances)
+
+        return(idx)
+
+class VarMFSelector():
+    __metaclass__ = abc.ABCMeta
+    def __init__(self, n_samples:int, **kwargs):
+        self.n_samples = n_samples
+    
+    def select(self, model:BayesianMFModel, index_pairs:list, **kwargs)->int:
+        raise NotImplementedError
+
+
+def var_mf_outcome(conditional_means:np.ndarray, conditional_variances:np.ndarray, index_pairs:list)->int:
+
+    variances = np.var(conditional_means, axis=0) + np.mean(conditional_variances, axis=0)
+
+    group_variances = [np.sum(variances[ii, jj])  for ii,jj in index_pairs]
+
+    return(np.argmax(group_variances))
+
+
+class VarBernMF(VarMFSelector):
+    def __init__(self, n_samples:int, **kwargs):
+        self.n_samples = n_samples
+    
+    def select(self, model:BayesBernMFModel, index_pairs:list, **kwargs)->int:
+        W_list, V_list = model.sample(self.n_samples)
+
+        pos_probs = expit(np.einsum('tik, tjk -> tij', W_list, V_list))
+
+        conditional_variances = pos_probs * (1.0-pos_probs)
+
+
+        idx = var_mf_outcome(conditional_means=pos_probs, conditional_variances=conditional_variances, index_pairs=index_pairs)
 
         return(idx)
