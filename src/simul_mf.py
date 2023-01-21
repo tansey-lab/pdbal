@@ -68,6 +68,11 @@ class MFDistribution():
 
             z = np.random.uniform(size=probs.shape)
             y = (z < probs).astype(int)
+        elif self.mode == 'norm':
+            mu = self.prod[ii, jj]
+            n = len(mu)
+            y = mu + self.stdv*np.random.standard_normal(size=n)
+
         return(y)
 
 
