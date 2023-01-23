@@ -119,3 +119,14 @@ class MFRowMSEDistance(MFDistance):
     def distance(self, W1:np.ndarray, V1:np.ndarray, prod1:np.ndarray,  W2:np.ndarray, V2:np.ndarray, prod2:np.ndarray):
         dist = np.mean(np.square(prod1[self.row,:] - prod2[self.row,:]))
         return(dist)
+
+
+class MFMaxCoordDistance(MFDistance):
+    def __init__(self):
+        super().__init__()
+
+    def distance(self, W1:np.ndarray, V1:np.ndarray, prod1:np.ndarray,  W2:np.ndarray, V2:np.ndarray, prod2:np.ndarray):
+        idx1 = np.argmax(prod1)
+        idx2 = np.argmax(prod2)
+        dist = float(idx1 != idx2)
+        return(dist)
