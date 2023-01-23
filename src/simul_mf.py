@@ -162,7 +162,7 @@ def active_mf(distribution:MFDistribution,
         mps_model.update(ii,jj,yy)
         avg_dist = mps_model.eval(n=n_samples, W=W, V=V, prod=prod, distance=distance)
         results.append({"Query":t, 
-                        "Strategy":"Var", 
+                        "Strategy":"MPS", 
                         "Objective distance":avg_dist})
 
         ## Random query:
