@@ -2,6 +2,7 @@ import numpy as np
 from dbal import DBALMFSelector, DBALBernMF, DBALNormMF
 from eig import EIGMFSelector, EIGBernMF, EIGNormMF
 from var import VarMFSelector, VarBernMF, VarNormMF
+from mps import MPSMFSelector, MPSNormMF
 from dists import MFDistance, MFMSEDistance, MFRowMSEDistance, MFMaxCoordDistance
 from mf_models import BayesianMFModel, BayesBernMFModel, BayesNormMFModel
 from copy import deepcopy
@@ -80,6 +81,7 @@ def active_mf(distribution:MFDistribution,
               dbal_selector:DBALMFSelector, 
               eig_selector:EIGMFSelector,
               var_selector:VarMFSelector,
+              mps_selector:MPSMFSelector,
               model:BayesianMFModel, 
               distance:MFDistance,
               nqueries:int,
@@ -97,6 +99,7 @@ def active_mf(distribution:MFDistribution,
     eig_model = deepcopy(model)
     dbal_model = deepcopy(model)
     var_model = deepcopy(model)
+    mps_model = deepcopy(model)
     random_model = deepcopy(model)
     
 
@@ -147,6 +150,17 @@ def active_mf(distribution:MFDistribution,
 
         var_model.update(ii,jj,yy)
         avg_dist = var_model.eval(n=n_samples, W=W, V=V, prod=prod, distance=distance)
+        results.append({"Query":t, 
+                        "Strategy":"Var", 
+                        "Objective distance":avg_dist})
+
+        ## MPS query:
+        idx = mps_selector.select(model=mps_model, index_pairs=index_pairs)
+        ii, jj = index_pairs[idx]
+        yy = distribution.sample_observations(ii, jj)
+
+        mps_model.update(ii,jj,yy)
+        avg_dist = mps_model.eval(n=n_samples, W=W, V=V, prod=prod, distance=distance)
         results.append({"Query":t, 
                         "Strategy":"Var", 
                         "Objective distance":avg_dist})
@@ -231,11 +245,13 @@ if __name__ == "__main__":
         eig_selector = EIGNormMF(n_samples=n_samples, sigma=stdv)
         dbal_selector = DBALNormMF(**dbal_kwargs)
         var_selector = VarNormMF(n_samples=n_samples)
+        mps_selector = MPSNormMF(n_samples=n_samples, dist=distance, sigma=stdv)
 
     result = active_mf(distribution=distribution, 
                                dbal_selector=dbal_selector, 
                                eig_selector=eig_selector, 
                                var_selector=var_selector,
+                               mps_selector=mps_selector,
                                model=model, 
                                distance=distance, 
                                nqueries=nqueries,

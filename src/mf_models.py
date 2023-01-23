@@ -82,8 +82,8 @@ class BayesianMFModel(object):
         self.y.extend(y_new)
 
     def eval(self, n:int, W:np.ndarray, V:np.ndarray, prod:np.ndarray, distance:MFDistance, **kwargs):
-        W_list, V_list = self.sample(n)
-        prod_list = np.einsum('tik, tjk -> tij',W_list, V_list)
+        W_list, V_list = self.sample(n) ## n x r x dim, n x c x dim
+        prod_list = np.einsum('tik, tjk -> tij',W_list, V_list) ## n x r x c
         avg_dist = distance.average_distance(W_list, V_list, prod_list, W, V, prod)
         return(avg_dist)
 
