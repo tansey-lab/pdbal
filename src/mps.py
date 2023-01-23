@@ -65,6 +65,7 @@ class MPSNormMF(MPSMFSelector):
         ll_group = ll_group - ll_sums
         probs = np.exp(ll_group)
 
-        scores = np.sum(probs*dists[:,np.newaxis], axis=1)
+        
+        scores = np.sum(probs*dists[:,np.newaxis], axis=0)
         idx = np.argmin(scores)
         return(idx)
