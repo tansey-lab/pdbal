@@ -2,7 +2,7 @@ import numpy as np
 from dbal import DBALMFSelector, DBALBernMF, DBALNormMF
 from eig import EIGMFSelector, EIGBernMF, EIGNormMF
 from var import VarMFSelector, VarBernMF, VarNormMF
-from dists import MFDistance, MFMSEDistance
+from dists import MFDistance, MFMSEDistance, MFRowMSEDistance
 from mf_models import BayesianMFModel, BayesBernMFModel, BayesNormMFModel
 from copy import deepcopy
 from numpy.linalg import norm
@@ -212,7 +212,9 @@ if __name__ == "__main__":
     ## Choose distances
     if obj == 'mse':
         distance = MFMSEDistance()
-
+    elif obj == 'row':
+        distance = MFRowMSEDistance(row=0)
+        
     n_samples = 100
     max_triples = 1000
     dbal_kwargs = {'n_samples':n_samples, 'dist':distance, 'max_triples':max_triples}

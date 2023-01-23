@@ -110,3 +110,12 @@ class MFMSEDistance(MFDistance):
     def distance(self, W1:np.ndarray, V1:np.ndarray, prod1:np.ndarray,  W2:np.ndarray, V2:np.ndarray, prod2:np.ndarray):
         dist = np.mean(np.square(prod1 - prod2))
         return(dist)
+
+class MFRowMSEDistance(MFDistance):
+    def __init__(self, row:int):
+        super().__init__()
+        self.row = row
+
+    def distance(self, W1:np.ndarray, V1:np.ndarray, prod1:np.ndarray,  W2:np.ndarray, V2:np.ndarray, prod2:np.ndarray):
+        dist = np.mean(np.square(prod1[self.row,:] - prod2[self.row,:]))
+        return(dist)
