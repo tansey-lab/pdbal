@@ -59,7 +59,7 @@ class MPSNormMF(MPSMFSelector):
 
         ll_group = np.empty((N, m))
         for i, (ii,jj) in enumerate(index_pairs):
-            ll_group[:, i] = np.sum( log_likelihoods[:, ii, jj] )
+            ll_group[:, i] = np.sum( log_likelihoods[:, ii, jj] , axis=1)
 
         ll_sums = logsumexp(ll_group, axis=0, keepdims=True)
         ll_group = ll_group - ll_sums
