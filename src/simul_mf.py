@@ -178,7 +178,6 @@ if __name__ == "__main__":
     bsize = args.bsize
 
     stdv = args.stdv
-    length = args.length
     obj = args.obj
     dataset = args.dataset
     
