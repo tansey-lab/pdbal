@@ -25,7 +25,7 @@ def alternating_minimization(ii, jj, y, n_features=5, n_epochs=100):
         row_lookup[i] = np.array(c)
 
     for j, c in col_lookup.items():
-        col_lookup[i] = np.array(c)
+        col_lookup[j] = np.array(c)
 
     W = np.random.standard_normal(size=(n_rows, n_features))
     V = np.random.standard_normal(size=(n_cols, n_features))
