@@ -140,12 +140,21 @@ class BayesBernMFModel(PyStanMFModel):
         return(dataset)
 
 class BayesNormMFModel(PyStanMFModel):        
-    def __init__(self, n_rows:int, n_cols:int, n_features:int, sigma:float, **kwargs):
+    def __init__(self, n_rows:int, n_cols:int, n_features:int, sigma:float=None, **kwargs):
         super().__init__(n_rows=n_rows, n_cols=n_cols, n_features=n_features)
-        self.sigma = sigma
+        self.W = np.zeros((self.n_rows, self.n_features))
+        self.V = np.zeros((self.n_cols, self.n_features))
 
-    def get_model_code(self):
-        return(norm_mf)
+        if sigma is None:
+            self.fixed_sigma = False
+            self.var = 1.0
+            self.sigma = 1.0
+        else:
+            self.fixed_sigma = True
+            self.sigma = sigma
+            self.var = np.square(self.sigma)
+
+
 
     def get_dataset(self):
         ii = np.array(self.ii).astype(int)
@@ -155,3 +164,19 @@ class BayesNormMFModel(PyStanMFModel):
         dataset = {"n_rows":self.n_rows, "n_cols":self.n_cols, "n_features":self.n_features, "n_entries":n_entries, "sigma":self.sigma, "ii":(ii+1), "jj":(jj+1), "y":y}
         return(dataset)
 
+
+# class AltBayesNormMFModel(BayesianMFModel):        
+#     def __init__(self, n_rows:int, n_cols:int, n_features:int, sigma:float, **kwargs):
+#         super().__init__(n_rows=n_rows, n_cols=n_cols, n_features=n_features)
+#         self.sigma = sigma
+#         self.row_lookup = {}
+#         self.col_lookup = {}
+
+#     def update(self, ii_new:np.ndarray, jj_new:np.ndarray, y_new:np.ndarray, **kwargs):
+#         self.ii.extend(ii_new)
+#         self.jj.extend(jj_new)
+#         self.y.extend(y_new)
+
+#         for idx, (i, j) in enumerate(zip(self.ii, self.jj))
+
+#     def sample_W(self):

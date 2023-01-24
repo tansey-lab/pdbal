@@ -16,36 +16,17 @@ import random
 
 class MFDistribution():
     def __init__(self,
-                 n_rows:int,
-                 n_cols:int,
-                 n_features:int,
-                 mode:str,
+                 W:np.ndarray,
+                 V:np.ndarray,
                  bsize:int=1,
-                 length:float=2.0, 
                  stdv:float=0.25, 
-                 phi:float=2.5, 
                  **kwargs):
 
-        self.n_rows = n_rows
-        self.n_cols = n_cols
-        self.n_features = n_features
-
-        self.W = np.random.standard_normal(size=(n_rows,n_features))
-        self.W = length*self.W/norm(self.W, axis=1, keepdims=True)
-        idx = np.random.choice(self.n_rows)
-        self.W[idx,:] = length*np.ones(self.n_features)/np.sqrt(self.n_features)
-
-
-        self.V = np.random.standard_normal(size=(n_cols,n_features))
-        self.V = length*self.V/norm(self.V, axis=1, keepdims=True)
-        idx = np.random.choice(self.n_cols)
-        self.V[idx,:] = length*np.ones(self.n_features)/np.sqrt(self.n_features)
-
-
-        self.prod =  np.dot(self.W, self.V.transpose())
-        self.mode = mode
+        self.W = W
+        self.V = V
+        self.prod =  np.einsum('ik, jk -> ij', self.W, self.V)
         self.stdv = stdv
-        self.phi = phi
+
 
         ## Chunk up rows and columns into groups of size bsize
         row_indices = np.arange(self.n_rows)
@@ -64,15 +45,10 @@ class MFDistribution():
                 self.index_pairs.append( (I[:,0], I[:,1]) )
 
     def sample_observations(self, ii:np.ndarray, jj:np.ndarray):
-        if self.mode == 'bern':
-            probs = expit(self.prod[ii, jj])
 
-            z = np.random.uniform(size=probs.shape)
-            y = (z < probs).astype(int)
-        elif self.mode == 'norm':
-            mu = self.prod[ii, jj]
-            n = len(mu)
-            y = mu + self.stdv*np.random.standard_normal(size=n)
+        mu = self.prod[ii, jj]
+        n = len(mu)
+        y = mu + self.stdv*np.random.standard_normal(size=n)
 
         return(y)
 
@@ -187,41 +163,41 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Simulation arguments')
     parser.add_argument('--seed', type=int, default=100, help="The random seed.")
     parser.add_argument('--obj', type=str, default='mse', help="The objective we use.")
-    parser.add_argument('--mode', type=str, default='norm', help="The model we use.")
+    parser.add_argument('--dataset', type=str, default='brenton', help="brenton, marshall or porkka.")
     
-    parser.add_argument('--n_rows', type=int, default=30, help="Number of matrix rows.")
-    parser.add_argument('--n_cols', type=int, default=20, help="Number of matrix cols.")
-    parser.add_argument('--n_features', type=int, default=3, help="Dimensionality of embeddings.")
     parser.add_argument('--bsize', type=int, default=5, help="Size of row/col groupings.")
 
     parser.add_argument('--stdv', type=float, default=0.25, help="Gaussian noise for linear regression.")
-    parser.add_argument('--phi', type=float, default=3.0, help="Beta regression parameter.")
     parser.add_argument('--nqueries', type=int, default=100, help="Number of rounds.")
-    parser.add_argument('--length', type=float, default=2.0, help="Length of ground truth w^* vector.")
 
     args = parser.parse_args()
     np.random.seed(args.seed)
     random.seed(args.seed)
     
     nqueries = args.nqueries
-    n_rows = args.n_rows
-    n_cols = args.n_cols
-    n_features = args.n_features
     bsize = args.bsize
 
     stdv = args.stdv
     length = args.length
     obj = args.obj
-    mode = args.mode
-    phi = args.phi
+    dataset = args.dataset
     
     ## Folder name
-    folder = os.path.join('results', mode, obj)
+    folder = os.path.join('results', dataset, obj)
     
     os.makedirs(folder, exist_ok=True)
     fname = os.path.join(folder, str(args.seed)+".pkl")
-    
-    distribution = MFDistribution(n_rows, n_cols, n_features, mode, bsize, length, stdv, phi)
+
+    ## Load in the embeddings
+    dataset_fname = "../data/"+dataset+"_fit.pkl"
+    with open(dataset_fname, 'rb') as io:
+        fit = pickle.load(io)
+    W = fit['W']
+    V = fit['V']
+    n_rows, n_features = W.shape
+    n_cols, _ = V.shape
+
+    distribution = MFDistribution(W, V, bsize, stdv)
 
     ## Choose distances
     if obj == 'mse':
@@ -233,19 +209,13 @@ if __name__ == "__main__":
 
     n_samples = 100
     max_triples = 1000
-    dbal_kwargs = {'n_samples':n_samples, 'dist':distance, 'max_triples':max_triples}
+
     ## Choose models + selectors
-    if mode == 'bern':
-        model = BayesBernMFModel(n_rows=n_rows, n_cols=n_cols, n_features=n_features)
-        eig_selector = EIGBernMF(n_samples=n_samples)
-        dbal_selector = DBALBernMF(**dbal_kwargs)
-        var_selector = VarBernMF(n_samples=n_samples)
-    elif mode == 'norm':
-        model = BayesNormMFModel(n_rows=n_rows, n_cols=n_cols, n_features=n_features, sigma=stdv)
-        eig_selector = EIGNormMF(n_samples=n_samples, sigma=stdv)
-        dbal_selector = DBALNormMF(**dbal_kwargs)
-        var_selector = VarNormMF(n_samples=n_samples)
-        mps_selector = MPSNormMF(n_samples=n_samples, dist=distance, sigma=stdv)
+    model = BayesNormMFModel(n_rows=n_rows, n_cols=n_cols, n_features=n_features, sigma=stdv)
+    eig_selector = EIGNormMF(n_samples=n_samples, sigma=stdv)
+    dbal_selector = DBALNormMF(n_samples=n_samples, dist=distance, max_triples=max_triples)
+    var_selector = VarNormMF(n_samples=n_samples)
+    mps_selector = MPSNormMF(n_samples=n_samples, dist=distance, sigma=stdv)
 
     result = active_mf(distribution=distribution, 
                                dbal_selector=dbal_selector, 
