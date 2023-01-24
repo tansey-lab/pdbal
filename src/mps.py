@@ -56,7 +56,7 @@ class MPSNormMF(MPSMFSelector):
 
         dists = np.array([self.distance.distance(W_rest[i], V_rest[i], mu_rest[i], W_star, V_star, mu_star) for i in range(N)])
         
-        log_likelihoods = 0.5*np.square((mu_rest[np.newaxis,:,:,:]  - y[:,np.newaxis,:,:])/self.sigma) ## N x m x dim1 x dim2
+        log_likelihoods = 0.5*np.square((y[np.newaxis,:,:,:]  - mu_rest[:,np.newaxis,:,:])/self.sigma) ## N x m x dim1 x dim2
 
         ## Combine into groups
         ll_group = np.empty((N, self.n_model_samples, len(index_pairs)))
