@@ -32,8 +32,8 @@ def alternating_minimization(ii, jj, y, n_features=5, n_epochs=100):
 
     for _ in trange(n_epochs):
         for i, idx in row_lookup.items():
-            W[i,:], *_ = lstsq(V[idx,:], y[idx])
+            W[i,:], *_ = lstsq(V[jj[idx],:], y[idx])
 
         for j,idx in col_lookup.items():
-            V[j,:], *_ = lstsq(W[idx,:], y[idx])
+            V[j,:], *_ = lstsq(W[ii[idx],:], y[idx])
     return(W, V)
