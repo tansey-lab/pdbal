@@ -6,4 +6,4 @@ module load gcc/11.2.0
 
 seed=$(($LSB_JOBINDEX + 100))
 
-python src/simul_mf.py --seed $seed --obj "max" --mode "norm"
+python src/simul_mf.py --seed $seed --obj "max" --dataset "brenton"
