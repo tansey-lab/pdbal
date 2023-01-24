@@ -188,7 +188,7 @@ if __name__ == "__main__":
     fname = os.path.join(folder, str(args.seed)+".pkl")
 
     ## Load in the embeddings
-    dataset_fname = "../data/"+dataset+"_fit.pkl"
+    dataset_fname = "data/"+dataset+"_fit.pkl"
     with open(dataset_fname, 'rb') as io:
         fit = pickle.load(io)
     W = fit['W']
