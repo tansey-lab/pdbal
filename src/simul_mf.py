@@ -24,6 +24,8 @@ class MFDistribution():
 
         self.W = W
         self.V = V
+        self.n_rows, self.n_features = W.shape
+        self.n_cols, _ = V.shape
         self.prod =  np.einsum('ik, jk -> ij', self.W, self.V)
         self.stdv = stdv
 
