@@ -154,7 +154,8 @@ class BayesNormMFModel(PyStanMFModel):
             self.sigma = sigma
             self.var = np.square(self.sigma)
 
-
+    def get_model_code(self):
+        return(norm_mf)
 
     def get_dataset(self):
         ii = np.array(self.ii).astype(int)
