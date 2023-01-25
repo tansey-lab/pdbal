@@ -115,26 +115,26 @@ class PyStanMFModel(BayesianMFModel):
         else:
             dataset = self.get_dataset()
             model_code = self.get_model_code()
-            seed = np.random.randint(0, 2**20)
-            model = stan.build(model_code, data=dataset, random_seed=seed)
-            # model = stan.build(model_code, data=dataset)
+            # seed = np.random.randint(0, 2**20)
+            # model = stan.build(model_code, data=dataset, random_seed=seed)
+            model = stan.build(model_code, data=dataset)
 
 
             num_samples = int(n/self.nchains)*self.thin
             fit = model.sample(num_chains=self.nchains, num_samples=num_samples, num_thin=self.thin, num_warmup=num_samples)
             W = np.moveaxis(fit['W'],[0,1,2], [1,2,0])
             V = np.moveaxis(fit['V'],[0,1,2], [1,2,0])
-            
-        ## Clean up model fits
-        mname = httpstan.models.calculate_model_name(model_code)
-        model_path_name = httpstan.cache.model_directory(mname)
-        fit_name = os.path.join(model_path_name, 'fits')
-        fnames = os.listdir(fit_name)
-        for fname in fnames:
-            try:
-                os.remove(os.path.join(fit_name, fname))
-            except OSError:
-                pass
+
+        # ## Clean up model fits
+        # mname = httpstan.models.calculate_model_name(model_code)
+        # model_path_name = httpstan.cache.model_directory(mname)
+        # fit_name = os.path.join(model_path_name, 'fits')
+        # fnames = os.listdir(fit_name)
+        # for fname in fnames:
+        #     try:
+        #         os.remove(os.path.join(fit_name, fname))
+        #     except OSError:
+        #         pass
         return(W, V)
 
 

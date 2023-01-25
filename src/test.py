@@ -6,7 +6,7 @@ from alt_min import alternating_minimization
 import pickle
 
 
-df = pd.read_csv("../data/porkka_proc.csv")
+df = pd.read_csv("../data/brenton_2022_proc.csv")
 ii = df['ii'].values
 jj = df['jj'].values
 y = df["z-score"].values
@@ -57,12 +57,12 @@ model {
 }
 """
 
-# dataset = {"n_rows":n_rows, "n_cols":n_cols, "n_features":n_features, "n_entries":n_entries, "ii":(ii+1), "jj":(jj+1), "y":y}
+dataset = {"n_rows":n_rows, "n_cols":n_cols, "n_features":n_features, "n_entries":n_entries, "ii":(ii+1), "jj":(jj+1), "y":y}
 
-# num_samples = 50
-# n_thin = 5
-# model = stan.build(norm_mf, data=dataset)
-# fit = model.sample(num_chains=1, num_samples=num_samples, num_thin=n_thin, num_warmup=10000)
+num_samples = 50
+n_thin = 5
+model = stan.build(norm_mf, data=dataset, random_seed=10)
+fit = model.sample(num_chains=1, num_samples=num_samples, num_thin=n_thin, num_warmup=100)
 
 # W_fit = np.moveaxis(fit['W'],[0,1,2], [1,2,0])
 # V_fit = np.moveaxis(fit['V'],[0,1,2], [1,2,0])
