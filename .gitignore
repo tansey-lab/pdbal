@@ -1,6 +1,7 @@
 ## Mac OS stuff
 *.DS_Store
 
+figures/*
 notebooks/*
 results/*
 data/*
