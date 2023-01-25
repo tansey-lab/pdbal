@@ -3,7 +3,7 @@ from dbal import DBALMFSelector, DBALBernMF, DBALNormMF
 from eig import EIGMFSelector, EIGBernMF, EIGNormMF
 from var import VarMFSelector, VarBernMF, VarNormMF
 from mps import MPSMFSelector, MPSNormMF
-from dists import MFDistance, MFMSEDistance, MFRowMSEDistance, MFMaxCoordDistance
+from dists import MFDistance, MFMSEDistance, MFRowMSEDistance, MFMaxCoordDistance, MFMKendallDistance
 from mf_models import BayesianMFModel, BayesBernMFModel, BayesNormMFModel
 from copy import deepcopy
 from numpy.linalg import norm
@@ -207,6 +207,8 @@ if __name__ == "__main__":
         distance = MFRowMSEDistance(row=0)
     elif obj == 'max':
         distance = MFMaxCoordDistance()
+    elif obj == 'kendall':
+        distance = MFMKendallDistance()
 
     n_samples = 100
     max_triples = 1000

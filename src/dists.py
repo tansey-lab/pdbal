@@ -130,3 +130,12 @@ class MFMaxCoordDistance(MFDistance):
         idx2 = np.argmax(prod2)
         dist = float(idx1 != idx2)
         return(dist)
+
+class MFMKendallDistance(MFDistance):
+    def __init__(self):
+        super().__init__()
+
+    def distance(self, W1:np.ndarray, V1:np.ndarray, prod1:np.ndarray,  W2:np.ndarray, V2:np.ndarray, prod2:np.ndarray):
+        rho, _ = kendalltau( prod1, prod2 )
+        dist = 0.5*(1.0 - rho)
+        return(dist)
