@@ -139,3 +139,18 @@ class MFMKendallDistance(MFDistance):
         rho, _ = kendalltau( prod1, prod2 )
         dist = 0.5*(1.0 - rho)
         return(dist)
+
+class MFMRegretPerRowDistance(MFDistance):
+    def __init__(self):
+        super().__init__()
+
+    def distance(self, W1:np.ndarray, V1:np.ndarray, prod1:np.ndarray,  W2:np.ndarray, V2:np.ndarray, prod2:np.ndarray):
+        n,_ = prod1.shape
+        idx1 = np.argmin(prod1, axis=1)
+        idx2 = np.argmin(prod2, axis=1)
+
+        onevtwo = prod1[np.arange(n), idx2] - prod1[np.arange(n), idx1] ## regret of choosing 2 over 1 (in 1's world)
+        twovone = prod2[np.arange(n), idx1] - prod2[np.arange(n), idx2] ## regret of choosing 1 over 2 (in 2's world)
+
+        dist = np.mean(0.5*onevtwo + 0.5*twovone)
+        return(dist)

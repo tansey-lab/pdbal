@@ -1,6 +1,7 @@
 import numpy as np
 from tqdm import trange
 from scipy.linalg import lstsq
+from sklearn.linear_model import Ridge, RidgeCV
 
 def alternating_minimization(ii, jj, y, n_features=5, n_epochs=100):
     n_rows = np.max(ii)+1
@@ -30,10 +31,16 @@ def alternating_minimization(ii, jj, y, n_features=5, n_epochs=100):
     W = np.random.standard_normal(size=(n_rows, n_features))
     V = np.random.standard_normal(size=(n_cols, n_features))
 
+    clf = Ridge(fit_intercept=False)
     for _ in trange(n_epochs):
         for i, idx in row_lookup.items():
-            W[i,:], *_ = lstsq(V[jj[idx],:], y[idx])
+            # W[i,:], *_ = lstsq(V[jj[idx],:], y[idx])
+            clf.fit(V[jj[idx],:], y[idx])
+            W[i,:] = clf.coef_
 
         for j,idx in col_lookup.items():
-            V[j,:], *_ = lstsq(W[ii[idx],:], y[idx])
+            # V[j,:], *_ = lstsq(W[ii[idx],:], y[idx])
+            clf.fit(W[ii[idx],:], y[idx])
+            V[j,:] = clf.coef_
+
     return(W, V)
