@@ -113,8 +113,10 @@ class PyStanMFModel(BayesianMFModel):
         else:
             dataset = self.get_dataset()
             model_code = self.get_model_code()
-            seed = np.random.randint(0, 2**20)
-            model = stan.build(model_code, data=dataset, random_seed=seed)
+            # seed = np.random.randint(0, 2**20)
+            # model = stan.build(model_code, data=dataset, random_seed=seed)
+            model = stan.build(model_code, data=dataset)
+
 
             num_samples = int(n/self.nchains)*self.thin
             fit = model.sample(num_chains=self.nchains, num_samples=num_samples, num_thin=self.thin, num_warmup=num_samples)
