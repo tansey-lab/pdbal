@@ -167,9 +167,8 @@ if __name__ == "__main__":
     parser.add_argument('--obj', type=str, default='mse', help="The objective we use.")
     parser.add_argument('--dataset', type=str, default='brenton', help="brenton, marshall or porkka.")
     
-    parser.add_argument('--bsize', type=int, default=5, help="Size of row/col groupings.")
-
-    parser.add_argument('--stdv', type=float, default=0.25, help="Gaussian noise for linear regression.")
+    parser.add_argument('--bsize', type=int, default=1, help="Size of row/col groupings.")
+    parser.add_argument('--stdv', type=float, default=0.5, help="Gaussian noise for linear regression.")
     parser.add_argument('--nqueries', type=int, default=100, help="Number of rounds.")
 
     args = parser.parse_args()
@@ -212,7 +211,7 @@ if __name__ == "__main__":
     elif obj == 'regret':
         distance = MFMRegretPerRowDistance()
 
-    n_samples = 100
+    n_samples = 150
     max_triples = 1000
 
     ## Choose models + selectors

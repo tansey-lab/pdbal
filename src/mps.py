@@ -33,7 +33,7 @@ class MPSMFSelector():
 
 
 class MPSNormMF(MPSMFSelector):
-    def __init__(self, n_samples:int, dist:MFDistance, sigma:float, n_model_samples:int=50, **kwargs):
+    def __init__(self, n_samples:int, dist:MFDistance, sigma:float, n_model_samples:int=10, **kwargs):
         super().__init__(n_samples, dist, n_model_samples, **kwargs)
         self.sigma = sigma
 
