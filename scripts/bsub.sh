@@ -25,3 +25,8 @@ bsub -J 'marshall_max[1-50]' -W 3:00 -n 3 -e output_logs/marshall_max%I.err -o o
 bsub -J 'marshall_kendall[1-50]' -W 3:00 -n 3 -e output_logs/marshall_kendall%I.err -o output_logs/marshall_kendall%I.out sh scripts/kendall/marshall.sh
 
 bsub -J 'marshall_regret[1-50]' -W 3:00 -n 3 -e output_logs/marshall_regret%I.err -o output_logs/marshall_regret%I.out sh scripts/regret/marshall.sh
+
+
+## momf
+
+bsub -J 'momf_cluster[1-50]' -W 3:00 -n 3 -e output_logs/momf_cluster%I.err -o output_logs/momf_cluster%I.out sh scripts/momf/cluster.sh
