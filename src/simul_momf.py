@@ -35,10 +35,10 @@ class MOMFDistribution():
         ## Generate column embeddings
         inform_n_cols = int(self.n_cols * self.inform_frac)
         inform_cols = np.random.choice(self.n_cols, size=inform_n_cols, replace=False)
-        self.V = self.sigma_norm*np.random.standard_normal(size=(self.n_cols, self.n_features))
+        self.V = 0.5*self.sigma_norm*np.random.standard_normal(size=(self.n_cols, self.n_features))
 
         for i in inform_cols:
-            self.V[i,:] = 2. * self.V[i,:]
+            self.V[i,:] = 8. * self.V[i,:]
 
         ## Generate mean row embeddings
         self.mu = self.sigma_norm * np.random.standard_normal(size=(self.K, self.n_features))
