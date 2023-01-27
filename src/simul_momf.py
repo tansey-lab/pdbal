@@ -83,9 +83,9 @@ def active_momf(distribution:MOMFDistribution,
     random_model = deepcopy(model)
     
 
-    ## Initialize with 1 point per column
-    ii = np.random.choice(n_rows, size=n_cols, replace=True)
-    jj = np.arange(n_cols)
+    ## Initialize with 2 points per column
+    ii = np.random.choice(n_rows, size=(2*n_cols), replace=True)
+    jj = np.concatenate([np.arange(n_cols),np.arange(n_cols)])
     yy = distribution.sample_observations(ii, jj)
 
     eig_model.update(ii,jj,yy)
@@ -211,7 +211,7 @@ if __name__ == "__main__":
                                burnin=1500)
 
     eig_selector = EIGNormMOMF(n_samples=n_samples, sigma=distribution.sigma_obs)
-    dbal_selector = DBALNormMOMF(n_samples=n_samples, dist=distance, max_triples=max_triples)
+    dbal_selector = DBALNormMOMF(n_samples=n_samples, dist=distance, max_triples=max_triples, dfactor=10.0)
     var_selector = VarNormMOMF(n_samples=n_samples)
     mps_selector = MPSNormMOMF(n_samples=n_samples, dist=distance, sigma=distribution.sigma_obs)
 
