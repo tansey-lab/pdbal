@@ -18,30 +18,30 @@ class MOMFDistribution():
     def __init__(self,
                  n_rows:int,
                  n_cols:int,
-                 n_features:int,
-                 K:int,
+                 n_features:int=3,
                  **kwargs):
 
         self.n_rows = n_rows
         self.n_cols = n_cols
         self.n_features = n_features
-        self.K = K
+        self.K = n_features
 
         self.sigma_obs = 0.25
         self.sigma_emb = 0.25
         self.sigma_norm = 2.0
-        self.inform_frac = 0.1
+
 
         ## Generate column embeddings
-        inform_n_cols = int(self.n_cols * self.inform_frac)
-        inform_cols = np.random.choice(self.n_cols, size=inform_n_cols, replace=False)
-        self.V = 0.5*self.sigma_norm*np.random.standard_normal(size=(self.n_cols, self.n_features))
+        inform_n_cols = int(2 * self.K) ## 2 informative columns for every cluster
+        noninform_n_cols = self.n_cols - inform_n_cols
 
-        for i in inform_cols:
-            self.V[i,:] = 8. * self.V[i,:]
+        V_inform = np.concatenate([5*self.sigma_norm*np.eye( self.K ) , -5*self.sigma_norm*np.eye( self.K )])
+        V_noninform = 0.5 * self.sigma_norm * np.random.standard_normal(size=(noninform_n_cols, self.n_features))
+
+        self.V = np.concatenate([V_inform,  V_noninform])
 
         ## Generate mean row embeddings
-        self.mu = self.sigma_norm * np.random.standard_normal(size=(self.K, self.n_features))
+        self.mu = self.sigma_norm * np.eye(self.K) ## K = n_features
 
         ## Generate row embeddings
         self.z = np.random.choice(self.K, size=self.n_rows, replace=True)
@@ -125,16 +125,16 @@ def active_momf(distribution:MOMFDistribution,
                         "Objective distance":avg_dist})
 
         ## Variance query:
-        i, j = var_selector.select(model=var_model)
-        ii = np.array([i])
-        jj = np.array([j])
-        yy = distribution.sample_observations(ii, jj)
+        # i, j = var_selector.select(model=var_model)
+        # ii = np.array([i])
+        # jj = np.array([j])
+        # yy = distribution.sample_observations(ii, jj)
 
-        var_model.update(ii,jj,yy)
-        avg_dist = var_model.eval(n=n_samples, W=W, V=V, z=z, distance=distance)
-        results.append({"Query":t, 
-                        "Strategy":"Var", 
-                        "Objective distance":avg_dist})
+        # var_model.update(ii,jj,yy)
+        # avg_dist = var_model.eval(n=n_samples, W=W, V=V, z=z, distance=distance)
+        # results.append({"Query":t, 
+        #                 "Strategy":"Var", 
+        #                 "Objective distance":avg_dist})
 
         ## MPS query:
         i, j = mps_selector.select(model=mps_model)
@@ -189,7 +189,7 @@ if __name__ == "__main__":
     fname = os.path.join(folder, str(args.seed)+".pkl")
 
     
-    distribution = MOMFDistribution(n_rows=10, n_cols=50, n_features=3, K=2)
+    distribution = MOMFDistribution(n_rows=10, n_cols=50, n_features=3, K=3)
 
     ## Choose distances
     if obj == 'cluster':
