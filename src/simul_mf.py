@@ -90,6 +90,7 @@ def active_mf(distribution:MFDistribution,
     eig_model.update(ii,jj,yy)
     dbal_model.update(ii,jj,yy)
     var_model.update(ii,jj,yy)
+    mps_model.update(ii,jj,yy)
     random_model.update(ii,jj,yy)
 
 
