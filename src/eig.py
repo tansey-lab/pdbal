@@ -173,3 +173,4 @@ class EIGNormMF(EIGMFSelector):
 
         idx = np.argmax(group_ents)
         return(idx)
+

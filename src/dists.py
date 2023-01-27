@@ -1,8 +1,8 @@
 import abc
 import numpy as np
 from scipy.spatial.distance import cdist, pdist, squareform, euclidean
-from scipy.stats import spearmanr, kendalltau
-
+from scipy.stats import kendalltau
+from sklearn.metrics.cluster import normalized_mutual_info_score
 
 class Distance():
     __metaclass__ = abc.ABCMeta
@@ -153,4 +153,36 @@ class MFMRegretPerRowDistance(MFDistance):
         twovone = prod2[np.arange(n), idx1] - prod2[np.arange(n), idx2] ## regret of choosing 1 over 2 (in 2's world)
 
         dist = np.mean(0.5*onevtwo + 0.5*twovone)
+        return(dist)
+
+
+
+class MOMFDistance():
+    __metaclass__ = abc.ABCMeta
+    def __init__(self, **kwargs):
+        return
+    
+    def distance(self, W1:np.ndarray, V1:np.ndarray, z1:np.ndarray,  W2:np.ndarray, V2:np.ndarray, z2:np.ndarray):
+        raise NotImplementedError
+
+    def square_form(self, W_list:np.ndarray, V_list:np.ndarray, z_list:np.ndarray):
+        N = W_list.shape[0]
+        M = np.empty((N,N))
+        for i in range(1,N):
+            for j in range(i):
+                M[i,j] = self.distance(W_list[i], V_list[i], z_list[i], W_list[j], V_list[j], z_list[j])
+        return(M)
+
+    def average_distance(self, W_list:np.ndarray, V_list:np.ndarray, z_list:np.ndarray,  W:np.ndarray, V:np.ndarray, z:np.ndarray):
+        N = W_list.shape[0]
+        avg_dist = np.mean( [self.distance(W_list[i], V_list[i], z_list[i], W, V, z) for i in range(N)])
+        return(avg_dist)
+
+
+class MOMFClusterDistance(MOMFDistance):
+    def __init__(self):
+        super().__init__()
+
+    def distance(self, W1: np.ndarray, V1: np.ndarray, z1: np.ndarray, W2: np.ndarray, V2: np.ndarray, z2: np.ndarray):
+        dist = 1.0 - normalized_mutual_info_score(z1, z2)
         return(dist)
