@@ -197,7 +197,7 @@ if __name__ == "__main__":
     
 
     n_samples = 150
-    max_triples = 1000
+    max_triples = 1500
 
     ## Choose models + selectors
     model = NormMixtureMFModel(n_rows=distribution.n_rows, 
@@ -207,11 +207,11 @@ if __name__ == "__main__":
                                sigma_obs=distribution.sigma_obs,
                                sigma_emb=distribution.sigma_emb,
                                sigma_norm=distribution.sigma_norm,
-                               thin=10,
+                               thin=15,
                                burnin=1500)
 
     eig_selector = EIGNormMOMF(n_samples=n_samples, sigma=distribution.sigma_obs)
-    dbal_selector = DBALNormMOMF(n_samples=n_samples, dist=distance, max_triples=max_triples, dfactor=10.0)
+    dbal_selector = DBALNormMOMF(n_samples=n_samples, dist=distance, max_triples=max_triples, dfactor=1.0)
     var_selector = VarNormMOMF(n_samples=n_samples)
     mps_selector = MPSNormMOMF(n_samples=n_samples, dist=distance, sigma=distribution.sigma_obs)
 
