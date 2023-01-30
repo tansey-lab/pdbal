@@ -25,13 +25,16 @@ class NormMixtureMFModel(object):
         self.var_emb = np.square(self.sigma_emb)
         self.var_obs = np.square(self.sigma_obs)
 
+        self.burnin = burnin
+        self.thin = thin
+
+        self.initialize()
+    
+    def initialize(self):
         self.V = np.random.standard_normal(size=(self.n_cols, self.n_features))
         self.W = np.random.standard_normal(size=(self.n_rows, self.n_features))
         self.mu = np.random.standard_normal(size=(self.K, self.n_features))
         self.z = np.random.choice(self.K, size=self.n_rows, replace=True)
-
-        self.burnin = burnin
-        self.thin = thin
 
     def z_step(self):
         log_probs = -0.5*cdist(self.W, self.mu, metric='sqeuclidean')/np.square(self.sigma_emb) ## n_rows x K
@@ -80,7 +83,8 @@ class NormMixtureMFModel(object):
                 self.W[i,:] = sample_mvn_from_precision(Q=P_n, mu_part=mu_part)
     
     def sample(self, n:int):
-
+        self.initialize()
+        
         W = np.empty((n, self.n_rows, self.n_features))
         V = np.empty((n, self.n_cols, self.n_features))
         z = np.empty((n, self.n_rows), dtype=np.int32)

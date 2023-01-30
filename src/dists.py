@@ -91,7 +91,7 @@ class MFDistance():
 
     def square_form(self, W_list:np.ndarray, V_list:np.ndarray, prod_list:np.ndarray):
         N = W_list.shape[0]
-        M = np.empty((N,N))
+        M = np.zeros((N,N))
         for i in range(1,N):
             for j in range(i):
                 M[i,j] = self.distance(W_list[i], V_list[i], prod_list[i], W_list[j], V_list[j], prod_list[j])
@@ -168,7 +168,7 @@ class MOMFDistance():
 
     def square_form(self, W_list:np.ndarray, V_list:np.ndarray, z_list:np.ndarray):
         N = W_list.shape[0]
-        M = np.empty((N,N))
+        M = np.zeros((N,N))
         for i in range(1,N):
             for j in range(i):
                 M[i,j] = self.distance(W_list[i], V_list[i], z_list[i], W_list[j], V_list[j], z_list[j])
