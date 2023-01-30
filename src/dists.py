@@ -95,6 +95,7 @@ class MFDistance():
         for i in range(1,N):
             for j in range(i):
                 M[i,j] = self.distance(W_list[i], V_list[i], prod_list[i], W_list[j], V_list[j], prod_list[j])
+                M[j,i] = M[i,j]
         return(M)
 
     def average_distance(self, W_list:np.ndarray, V_list:np.ndarray, prod_list:np.ndarray,  W:np.ndarray, V:np.ndarray, prod:np.ndarray):
@@ -171,6 +172,7 @@ class MOMFDistance():
         for i in range(1,N):
             for j in range(i):
                 M[i,j] = self.distance(W_list[i], V_list[i], z_list[i], W_list[j], V_list[j], z_list[j])
+                M[j,i] = M[i,j]
         return(M)
 
     def average_distance(self, W_list:np.ndarray, V_list:np.ndarray, z_list:np.ndarray,  W:np.ndarray, V:np.ndarray, z:np.ndarray):
