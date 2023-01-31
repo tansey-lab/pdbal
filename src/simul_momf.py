@@ -75,6 +75,8 @@ def active_momf(distribution:MOMFDistribution,
     n_rows = W.shape[0]
     n_cols = V.shape[0]
 
+    col_norms = np.linalg.norm(V, axis=1)
+
     print("Cloning models...")
     eig_model = deepcopy(model)
     dbal_model = deepcopy(model)
@@ -109,7 +111,8 @@ def active_momf(distribution:MOMFDistribution,
         avg_dist = eig_model.eval(n=n_samples, W=W, V=V, z=z, distance=distance)
         results.append({"Query":t, 
                         "Strategy":"EIG", 
-                        "Objective distance":avg_dist})
+                        "Objective distance":avg_dist,
+                        "Column norm": col_norms[j]})
 
 
         ## DBAL query:
@@ -122,7 +125,8 @@ def active_momf(distribution:MOMFDistribution,
         avg_dist = dbal_model.eval(n=n_samples, W=W, V=V, z=z, distance=distance)
         results.append({"Query":t, 
                         "Strategy":"DBAL", 
-                        "Objective distance":avg_dist})
+                        "Objective distance":avg_dist,
+                        "Column norm": col_norms[j]})
 
         ## Variance query:
         # i, j = var_selector.select(model=var_model)
@@ -146,7 +150,8 @@ def active_momf(distribution:MOMFDistribution,
         avg_dist = mps_model.eval(n=n_samples, W=W, V=V, z=z, distance=distance)
         results.append({"Query":t, 
                         "Strategy":"MPS", 
-                        "Objective distance":avg_dist})
+                        "Objective distance":avg_dist,
+                        "Column norm": col_norms[j]})
 
         ## Random query:
         i = np.random.choice(n_rows)
@@ -159,7 +164,8 @@ def active_momf(distribution:MOMFDistribution,
         avg_dist = random_model.eval(n=n_samples, W=W, V=V, z=z, distance=distance)
         results.append({"Query":t, 
                         "Strategy":"Random", 
-                        "Objective distance":avg_dist})
+                        "Objective distance":avg_dist,
+                        "Column norm": col_norms[j]})
 
         ## Save out results
         with open(fname, 'wb') as io:
@@ -196,8 +202,8 @@ if __name__ == "__main__":
         distance = MOMFClusterDistance()
     
 
-    n_samples = 150
-    max_triples = 1500
+    n_samples = 200
+    max_triples = 2000
 
     ## Choose models + selectors
     model = NormMixtureMFModel(n_rows=distribution.n_rows, 
@@ -207,8 +213,8 @@ if __name__ == "__main__":
                                sigma_obs=distribution.sigma_obs,
                                sigma_emb=distribution.sigma_emb,
                                sigma_norm=distribution.sigma_norm,
-                               thin=15,
-                               burnin=1500)
+                               thin=20,
+                               burnin=3000)
 
     eig_selector = EIGNormMOMF(n_samples=n_samples, sigma=distribution.sigma_obs)
     dbal_selector = DBALNormMOMF(n_samples=n_samples, dist=distance, max_triples=max_triples, dfactor=1.0)
