@@ -178,7 +178,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Simulation arguments')
     parser.add_argument('--seed', type=int, default=100, help="The random seed.")
     parser.add_argument('--obj', type=str, default='cluster', help="The objective we use.")
-    parser.add_argument('--nqueries', type=int, default=100, help="Number of rounds.")
+    parser.add_argument('--nqueries', type=int, default=300, help="Number of rounds.")
 
     args = parser.parse_args()
     np.random.seed(args.seed)
