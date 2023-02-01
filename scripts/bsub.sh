@@ -29,4 +29,4 @@ bsub -J 'marshall_regret[1-50]' -W 3:00 -n 3 -e output_logs/marshall_regret%I.er
 
 ## momf
 
-bsub -J 'momf_cluster[1-100]' -W 8:00 -n 4 -e output_logs/momf_cluster%I.err -o output_logs/momf_cluster%I.out sh scripts/momf/cluster.sh
+bsub -J 'momf_cluster[1-150]' -W 15:00 -n 4 -e output_logs/momf_cluster%I.err -o output_logs/momf_cluster%I.out sh scripts/momf/cluster.sh
