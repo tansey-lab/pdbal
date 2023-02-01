@@ -195,7 +195,7 @@ if __name__ == "__main__":
     fname = os.path.join(folder, str(args.seed)+".pkl")
 
     
-    distribution = MOMFDistribution(n_rows=10, n_cols=100, n_features=3, K=3)
+    distribution = MOMFDistribution(n_rows=10, n_cols=60, n_features=3, K=3)
 
     ## Choose distances
     if obj == 'cluster':
