@@ -5,6 +5,8 @@ from scipy.spatial.distance import cdist
 from scipy.special import logsumexp
 from fast_mvn import sample_mvn_from_precision
 from tqdm import trange
+from alt_min import alternating_minimization
+from sklearn.cluster import KMeans
 
 class NormMixtureMFModel(object):
     __metaclass__ = abc.ABCMeta
@@ -31,10 +33,17 @@ class NormMixtureMFModel(object):
         self.initialize()
     
     def initialize(self):
-        self.V = np.random.standard_normal(size=(self.n_cols, self.n_features))
-        self.W = np.random.standard_normal(size=(self.n_rows, self.n_features))
-        self.mu = np.random.standard_normal(size=(self.K, self.n_features))
-        self.z = np.random.choice(self.K, size=self.n_rows, replace=True)
+        if len(self.ii) > 0:
+            self.W, self.V = alternating_minimization(self.ii, self.jj, self.y, n_rows=self.n_rows, n_cols=self.n_cols, n_features=self.n_features)
+            clf = KMeans(n_clusters=self.K)
+            clf.fit(self.W)
+            self.mu = clf.cluster_centers_
+            self.z = clf.labels_
+        else:
+            self.V = np.random.standard_normal(size=(self.n_cols, self.n_features))
+            self.W = np.random.standard_normal(size=(self.n_rows, self.n_features))
+            self.mu = np.random.standard_normal(size=(self.K, self.n_features))
+            self.z = np.random.choice(self.K, size=self.n_rows, replace=True)
 
     def z_step(self):
         log_probs = -0.5*cdist(self.W, self.mu, metric='sqeuclidean')/np.square(self.sigma_emb) ## n_rows x K

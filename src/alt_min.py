@@ -3,11 +3,7 @@ from tqdm import trange
 from scipy.linalg import lstsq
 from sklearn.linear_model import Ridge, RidgeCV
 
-def alternating_minimization(ii, jj, y, n_features=5, n_epochs=100):
-    np.random.seed(100)
-    n_rows = np.max(ii)+1
-    n_cols = np.max(jj)+1
-
+def alternating_minimization(ii, jj, y, n_rows, n_cols, n_features=5, n_epochs=100):
     ## Preprocessing
     row_lookup = {}
     col_lookup = {}
