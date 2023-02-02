@@ -16,15 +16,17 @@ import random
 
 class MOMFDistribution():
     def __init__(self,
-                 n_rows:int,
+                 row_per_cluster:int,
                  n_cols:int,
                  n_features:int=3,
                  **kwargs):
 
-        self.n_rows = n_rows
-        self.n_cols = n_cols
-        self.n_features = n_features
         self.K = n_features
+        self.n_features = n_features
+        self.n_rows = row_per_cluster*self.K
+        self.n_cols = n_cols
+        
+        
 
         self.sigma_obs = 0.25
         self.sigma_emb = 0.25
@@ -32,10 +34,21 @@ class MOMFDistribution():
 
 
         ## Generate column embeddings
-        inform_n_cols = int(2 * self.K) ## 2 informative columns for every cluster
+        inform_n_cols = int(4 * self.K) ## 4 informative columns for every cluster
         noninform_n_cols = self.n_cols - inform_n_cols
 
-        V_inform = np.concatenate([5*self.sigma_norm*np.eye( self.K ) , -5*self.sigma_norm*np.eye( self.K )])
+
+        ## Generate informative columns
+        V_i = np.concatenate([5*self.sigma_norm*np.eye( self.K ) , -5*self.sigma_norm*np.eye( self.K )])
+
+        ## Apply a random rotation to V_i
+        A = np.random.standard_normal(size=(self.K, self.K))
+        M = (A + A.T) / np.sqrt(2.) 
+        _, U = np.linalg.eigh(M)
+        V_i_transform = np.dot(V_i,U)
+        V_inform = np.concatenate([V_i, V_i_transform])
+
+        ## Generate non-informative columns
         V_noninform = 0.5 * self.sigma_norm * np.random.standard_normal(size=(noninform_n_cols, self.n_features))
 
         self.V = np.concatenate([V_inform,  V_noninform])
@@ -44,12 +57,11 @@ class MOMFDistribution():
         self.mu = self.sigma_norm * np.eye(self.K) ## K = n_features
 
         ## Generate row embeddings
-        self.z = np.random.choice(self.K, size=self.n_rows, replace=True)
+        self.z = np.random.permutation(np.tile(np.arange(self.K), row_per_cluster))
 
-        self.W = np.empty((n_rows, n_features))
-        for i in range(n_rows):
-            self.W[i,:] = self.mu[self.z[i],:] + self.sigma_emb*np.random.standard_normal(size=n_features)
-
+        self.W = np.empty((self.n_rows, self.n_features))
+        for i in range(self.n_rows):
+            self.W[i,:] = self.mu[self.z[i],:] + self.sigma_emb*np.random.standard_normal(size=self.n_features)
 
         self.prod =  np.einsum('ik, jk -> ij', self.W, self.V)
 
@@ -112,6 +124,8 @@ def active_momf(distribution:MOMFDistribution,
         results.append({"Query":t, 
                         "Strategy":"EIG", 
                         "Objective distance":avg_dist,
+                        "Column": j,
+                        "Cluster":z[i],
                         "Column norm": col_norms[j]})
 
 
@@ -126,6 +140,8 @@ def active_momf(distribution:MOMFDistribution,
         results.append({"Query":t, 
                         "Strategy":"DBAL", 
                         "Objective distance":avg_dist,
+                        "Column": j,
+                        "Cluster":z[i],
                         "Column norm": col_norms[j]})
 
         ## Variance query:
@@ -151,6 +167,8 @@ def active_momf(distribution:MOMFDistribution,
         results.append({"Query":t, 
                         "Strategy":"MPS", 
                         "Objective distance":avg_dist,
+                        "Column": j,
+                        "Cluster": z[i],
                         "Column norm": col_norms[j]})
 
         ## Random query:
@@ -165,6 +183,8 @@ def active_momf(distribution:MOMFDistribution,
         results.append({"Query":t, 
                         "Strategy":"Random", 
                         "Objective distance":avg_dist,
+                        "Column": j,
+                        "Cluster": z[i],
                         "Column norm": col_norms[j]})
 
         ## Save out results
@@ -195,7 +215,7 @@ if __name__ == "__main__":
     fname = os.path.join(folder, str(args.seed)+".pkl")
 
     
-    distribution = MOMFDistribution(n_rows=10, n_cols=60, n_features=3, K=3)
+    distribution = MOMFDistribution(row_per_cluster=4, n_cols=60, n_features=3, K=3)
 
     ## Choose distances
     if obj == 'cluster':
@@ -214,7 +234,7 @@ if __name__ == "__main__":
                                sigma_emb=distribution.sigma_emb,
                                sigma_norm=distribution.sigma_norm,
                                thin=20,
-                               burnin=3000)
+                               burnin=2000)
 
     eig_selector = EIGNormMOMF(n_samples=n_samples, sigma=distribution.sigma_obs)
     dbal_selector = DBALNormMOMF(n_samples=n_samples, dist=distance, max_triples=max_triples, dfactor=1.0)
