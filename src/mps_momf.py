@@ -41,5 +41,8 @@ class MPSNormMOMF():
         per_y_scores = np.sum(probs*dists[:,np.newaxis, np.newaxis, np.newaxis], axis=0) ## m x dim1 x dim2
         scores = np.mean(per_y_scores, axis=0) ## dim1 x dim2
 
-        i, j = np.unravel_index(np.argmin(scores, axis=None), scores.shape)
+        ii, jj =  np.where(scores <= np.partition(scores.flatten(), 2)[2])
+        index = np.random.choice(len(ii))
+        i = ii[index]
+        j = jj[index]
         return(i, j)
