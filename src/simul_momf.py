@@ -237,7 +237,7 @@ if __name__ == "__main__":
                                burnin=2000)
 
     eig_selector = EIGNormMOMF(n_samples=n_samples, sigma=distribution.sigma_obs)
-    dbal_selector = DBALNormMOMF(n_samples=n_samples, dist=distance, max_triples=max_triples, dfactor=1.0)
+    dbal_selector = DBALNormMOMF(n_samples=n_samples, dist=distance, max_triples=max_triples, dfactor=60.0)
     var_selector = VarNormMOMF(n_samples=n_samples)
     mps_selector = MPSNormMOMF(n_samples=n_samples, dist=distance, sigma=distribution.sigma_obs)
 
