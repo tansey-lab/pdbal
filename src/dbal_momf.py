@@ -94,7 +94,10 @@ class DBALNormMOMF():
         # i, j = np.unravel_index(np.argmin(scores, axis=None), scores.shape)
         # ii, jj =  np.where(scores <= np.partition(scores.flatten(), 2)[2])
         ii, jj = np.where(scores <= np.min(scores))
-        index = np.random.choice(len(ii))
+
+        nmins = len(ii)
+        print("Number of minimizers:", nmins)
+        index = np.random.choice(nmins)
         i = ii[index]
         j = jj[index]
         return(i,j)
