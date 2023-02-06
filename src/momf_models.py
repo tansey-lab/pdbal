@@ -19,6 +19,7 @@ class NormMixtureMFModel(object):
         self.n_cols = n_cols
         self.n_features = n_features
         self.K = K
+
         self.sigma_obs = sigma_obs
         self.sigma_emb = sigma_emb
         self.sigma_norm = sigma_norm
@@ -35,10 +36,12 @@ class NormMixtureMFModel(object):
     def initialize(self):
         if len(self.ii) > 0:
             self.W, self.V = alternating_minimization(self.ii, self.jj, self.y, n_rows=self.n_rows, n_cols=self.n_cols, n_features=self.n_features)
-            clf = KMeans(n_clusters=self.K)
-            clf.fit(self.W)
-            self.mu = clf.cluster_centers_
-            self.z = clf.labels_
+            # clf = KMeans(n_clusters=self.K)
+            # clf.fit(self.W)
+            # self.mu = clf.cluster_centers_
+            # self.z = clf.labels_
+            self.mu = np.random.standard_normal(size=(self.K, self.n_features))
+            self.z = np.random.choice(self.K, size=self.n_rows, replace=True)
         else:
             self.V = np.random.standard_normal(size=(self.n_cols, self.n_features))
             self.W = np.random.standard_normal(size=(self.n_rows, self.n_features))
@@ -101,9 +104,9 @@ class NormMixtureMFModel(object):
         total_steps = self.burnin + n * self.thin
         i = 0
         for t in trange(total_steps):
+            self.mu_step()
             self.V_step()
             self.W_step()
-            self.mu_step()
             self.z_step()
 
             if (t >= self.burnin) and ((t - self.burnin)%self.thin == 0):
