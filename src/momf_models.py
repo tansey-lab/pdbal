@@ -140,7 +140,8 @@ class NormMixtureMFModel(object):
         total_steps = self.burnin + n * self.thin
         i = 0
         for t in trange(total_steps):
-            self.mu_step()
+            # self.mu_step()
+            self.mu_var_step()
             self.V_step()
             self.W_step()
             self.z_step()
