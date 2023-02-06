@@ -97,6 +97,11 @@ class DBALNormMOMF():
 
         nmins = len(ii)
         print("Number of minimizers:", nmins)
+        if len(nmins > 1):
+            print("scores:", scores)
+            print("ll:", ll)
+            print("log_triple_dists:", log_triple_dists)
+
         index = np.random.choice(nmins)
         i = ii[index]
         j = jj[index]
