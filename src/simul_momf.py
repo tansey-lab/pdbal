@@ -144,6 +144,7 @@ def active_momf(distribution:MOMFDistribution,
                         "Cluster":z[i],
                         "Column norm": col_norms[j]})
 
+        print(results[-1])
         ## Variance query:
         # i, j = var_selector.select(model=var_model)
         # ii = np.array([i])
