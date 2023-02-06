@@ -3,6 +3,7 @@ import abc
 from dists import MOMFDistance
 from scipy.spatial.distance import cdist
 from scipy.special import logsumexp
+from scipy.stats import invgamma
 from fast_mvn import sample_mvn_from_precision
 from tqdm import trange
 from alt_min import alternating_minimization
@@ -10,7 +11,8 @@ from sklearn.cluster import KMeans
 
 class NormMixtureMFModel(object):
     __metaclass__ = abc.ABCMeta
-    def __init__(self, n_rows:int, n_cols:int, n_features:int, K:int, sigma_obs:float, sigma_emb:float, sigma_norm:float, thin:int=10, burnin:int=100, **kwargs):
+    # def __init__(self, n_rows:int, n_cols:int, n_features:int, K:int, sigma_obs:float, sigma_emb:float, sigma_norm:float, thin:int=10, burnin:int=100, **kwargs):
+    def __init__(self, n_rows:int, n_cols:int, n_features:int, K:int, sigma_obs:float, alpha_0:float, beta_0:float, v_0:float, sigma_norm:float, thin:int=10, burnin:int=100, **kwargs):
         self.ii = np.array([], dtype=np.int32)
         self.jj = np.array([], dtype=np.int32)
         self.y = np.array([], dtype=np.float32)
@@ -20,12 +22,17 @@ class NormMixtureMFModel(object):
         self.n_features = n_features
         self.K = K
 
+        self.alpha_0 = alpha_0
+        self.beta_0 = beta_0
+        self.v_0 = v_0
+        self.v_0_sqrt = np.sqrt(v_0)
+        self.v_0_inv = 1.0/v_0
         self.sigma_obs = sigma_obs
-        self.sigma_emb = sigma_emb
+        # self.sigma_emb = sigma_emb
         self.sigma_norm = sigma_norm
 
         self.var_0 = np.square(sigma_norm)
-        self.var_emb = np.square(self.sigma_emb)
+        # self.var_emb = np.square(self.sigma_emb)
         self.var_obs = np.square(self.sigma_obs)
 
         self.burnin = burnin
@@ -40,13 +47,17 @@ class NormMixtureMFModel(object):
             # clf.fit(self.W)
             # self.mu = clf.cluster_centers_
             # self.z = clf.labels_
-            self.mu = np.random.standard_normal(size=(self.K, self.n_features))
-            self.z = np.random.choice(self.K, size=self.n_rows, replace=True)
+            # self.mu = np.random.standard_normal(size=(self.K, self.n_features))
+            # self.var_emb = np.random.inver
+            # self.z = np.random.choice(self.K, size=self.n_rows, replace=True)
         else:
             self.V = np.random.standard_normal(size=(self.n_cols, self.n_features))
             self.W = np.random.standard_normal(size=(self.n_rows, self.n_features))
-            self.mu = np.random.standard_normal(size=(self.K, self.n_features))
-            self.z = np.random.choice(self.K, size=self.n_rows, replace=True)
+        
+        self.mu = np.random.standard_normal(size=(self.K, self.n_features))
+        self.z = np.random.choice(self.K, size=self.n_rows, replace=True)
+        self.var_emb = 1.0/(np.random.gamma(shape=self.alpha_0, scale=(1.0/self.beta_0), size=self.K))
+        self.sigma_emb = np.sqrt(self.var_emb)
 
     def z_step(self):
         log_probs = -0.5*cdist(self.W, self.mu, metric='sqeuclidean')/np.square(self.sigma_emb) ## n_rows x K
@@ -54,17 +65,42 @@ class NormMixtureMFModel(object):
         for i in range(self.n_rows):
             self.z[i] = np.random.choice(self.K, p=probs[i,:])
 
-    def mu_step(self):
+    # def mu_step(self):
+    #     for k in range(self.K):
+    #         mask = self.z == k
+    #         n = np.sum(mask)
+    #         if n == 0:
+    #             self.mu[k,:] = self.sigma_norm * np.random.standard_normal(size=self.n_features)
+    #         else:
+    #             mu_k = np.mean(self.W[mask,:], axis=0) * n * self.var_0/( self.var_emb + n * self.var_0)
+    #             sigma_k = np.sqrt(self.var_0 * self.var_emb /(self.var_emb + n * self.var_0))
+
+    #             self.mu[k,:] = mu_k + sigma_k * np.random.standard_normal(size=self.n_features)
+
+    def mu_var_step(self):
         for k in range(self.K):
             mask = self.z == k
             n = np.sum(mask)
             if n == 0:
-                self.mu[k,:] = self.sigma_norm * np.random.standard_normal(size=self.n_features)
+                self.var_emb = 1.0/(np.random.gamma(shape=self.alpha_0, scale=(1.0/self.beta_0)))
+                self.sigma_emb = np.sqrt(self.var_emb)
+                self.mu[k,:] = self.v_0_sqrt * self.sigma_emb * np.random.standard_normal(size=self.n_features)
             else:
-                mu_k = np.mean(self.W[mask,:], axis=0) * n * self.var_0/( self.var_emb + n * self.var_0)
-                sigma_k = np.sqrt(self.var_0 * self.var_emb /(self.var_emb + n * self.var_0))
+                alpha_n = self.alpha_0 + 0.5*n
 
-                self.mu[k,:] = mu_k + sigma_k * np.random.standard_normal(size=self.n_features)
+                mean_k = np.mean(self.W[mask,:], axis=0, keepdims=True)
+                sum_of_squares = np.sum(np.square(self.W[mask,:] - mean_k))
+                beta_n = self.beta_0 + 0.5*sum_of_squares + 0.5*n*self.v_0_inv/(self.v_0_inv + n) * np.sum(np.square(mean_k))
+
+                ## Update var_emb/ sigma_emb
+                self.var_emb = 1.0/(np.random.gamma(shape=alpha_n, scale=(1.0/beta_n)))
+                self.sigma_emb = np.sqrt(self.var_emb)
+
+
+                mu_k = np.squeeze(mean_k) * n/(self.v_0_inv + n)
+
+                ## Update mu
+                self.mu[k,:] = mu_k + ( self.v_0_sqrt * self.sigma_emb * np.random.standard_normal(size=self.n_features) )
 
     def V_step(self):
         for j in range(self.n_cols):
