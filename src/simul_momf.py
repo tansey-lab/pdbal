@@ -227,12 +227,24 @@ if __name__ == "__main__":
     max_triples = 2000
 
     ## Choose models + selectors
+    # model = NormMixtureMFModel(n_rows=distribution.n_rows, 
+    #                            n_cols=distribution.n_cols, 
+    #                            n_features=distribution.n_features, 
+    #                            K=distribution.K,
+    #                            sigma_obs=distribution.sigma_obs,
+    #                            sigma_emb=distribution.sigma_emb,
+    #                            sigma_norm=distribution.sigma_norm,
+    #                            thin=20,
+    #                            burnin=2000)
+
     model = NormMixtureMFModel(n_rows=distribution.n_rows, 
                                n_cols=distribution.n_cols, 
                                n_features=distribution.n_features, 
                                K=distribution.K,
                                sigma_obs=distribution.sigma_obs,
-                               sigma_emb=distribution.sigma_emb,
+                               alpha_0=3.0,
+                               beta_0=4.0,
+                               v_0=2.0,
                                sigma_norm=distribution.sigma_norm,
                                thin=20,
                                burnin=2000)
