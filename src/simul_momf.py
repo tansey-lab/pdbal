@@ -97,9 +97,11 @@ def active_momf(distribution:MOMFDistribution,
     random_model = deepcopy(model)
     
 
-    ## Initialize with 2 points per column
-    ii = np.random.choice(n_rows, size=(2*n_cols), replace=True)
-    jj = np.concatenate([np.arange(n_cols),np.arange(n_cols)])
+    ## Initialize with 5 points per column
+    reps = 5
+    ii = np.random.choice(n_rows, size=(reps*n_cols), replace=True)
+    jj = np.tile(np.arange(n_cols), reps)
+    
     yy = distribution.sample_observations(ii, jj)
 
     eig_model.update(ii,jj,yy)
@@ -216,7 +218,7 @@ if __name__ == "__main__":
     fname = os.path.join(folder, str(args.seed)+".pkl")
 
     
-    distribution = MOMFDistribution(row_per_cluster=4, n_cols=60, n_features=3, K=3)
+    distribution = MOMFDistribution(row_per_cluster=15, n_cols=60, n_features=3, K=3)
 
     ## Choose distances
     if obj == 'cluster':
@@ -243,7 +245,7 @@ if __name__ == "__main__":
                                K=distribution.K,
                                sigma_obs=distribution.sigma_obs,
                                alpha_0=3.0,
-                               beta_0=4.0,
+                               beta_0=1.0,
                                v_0=2.0,
                                sigma_norm=distribution.sigma_norm,
                                thin=20,
