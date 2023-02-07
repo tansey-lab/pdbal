@@ -3,7 +3,7 @@ from tqdm import trange
 from scipy.linalg import lstsq
 from sklearn.linear_model import Ridge, RidgeCV
 
-def alternating_minimization(ii, jj, y, n_rows, n_cols, n_features=5, n_epochs=100):
+def alternating_minimization(ii, jj, y, n_rows, n_cols, n_features=5, n_epochs=100, max_row_norm=None):
     ## Preprocessing
     row_lookup = {}
     col_lookup = {}
@@ -34,6 +34,10 @@ def alternating_minimization(ii, jj, y, n_rows, n_cols, n_features=5, n_epochs=1
             # W[i,:], *_ = lstsq(V[jj[idx],:], y[idx])
             clf.fit(V[jj[idx],:], y[idx])
             W[i,:] = clf.coef_
+            if max_row_norm is not None:
+                norm = np.linalg.norm(W[i,:])
+                if norm > max_row_norm:
+                    W[i,:] = (max_row_norm/norm)*W[i,:]
 
         for j,idx in col_lookup.items():
             # V[j,:], *_ = lstsq(W[ii[idx],:], y[idx])

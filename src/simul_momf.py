@@ -4,7 +4,7 @@ from eig_momf import EIGNormMOMF
 from var_momf import VarNormMOMF
 from mps_momf import MPSNormMOMF
 from dists import MOMFDistance, MOMFClusterDistance
-from momf_models import NormMixtureMFModel
+from momf_models import NormMixtureMFModel, FastNormMixtureMFModel
 from copy import deepcopy
 from numpy.linalg import norm
 from scipy.special import expit
@@ -229,7 +229,16 @@ if __name__ == "__main__":
     max_triples = 2000
 
     ## Choose models + selectors
-    model = NormMixtureMFModel(n_rows=distribution.n_rows, 
+    # model = NormMixtureMFModel(n_rows=distribution.n_rows, 
+    #                            n_cols=distribution.n_cols, 
+    #                            n_features=distribution.n_features, 
+    #                            K=distribution.K,
+    #                            sigma_obs=distribution.sigma_obs,
+    #                            sigma_emb=distribution.sigma_emb,
+    #                            sigma_norm=distribution.sigma_norm,
+    #                            thin=20,
+    #                            burnin=2000)
+    model = FastNormMixtureMFModel(n_rows=distribution.n_rows, 
                                n_cols=distribution.n_cols, 
                                n_features=distribution.n_features, 
                                K=distribution.K,
@@ -237,7 +246,7 @@ if __name__ == "__main__":
                                sigma_emb=distribution.sigma_emb,
                                sigma_norm=distribution.sigma_norm,
                                thin=20,
-                               burnin=2000)
+                               burnin=2500)
 
     # model = NormMixtureMFModel(n_rows=distribution.n_rows, 
     #                            n_cols=distribution.n_cols, 
