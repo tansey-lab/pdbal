@@ -98,7 +98,7 @@ def active_momf(distribution:MOMFDistribution,
     
 
     ## Initialize with 5 points per column
-    reps = 5
+    reps = 2
     ii = np.random.choice(n_rows, size=(reps*n_cols), replace=True)
     jj = np.tile(np.arange(n_cols), reps)
     
@@ -218,7 +218,7 @@ if __name__ == "__main__":
     fname = os.path.join(folder, str(args.seed)+".pkl")
 
     
-    distribution = MOMFDistribution(row_per_cluster=15, n_cols=60, n_features=3, K=3)
+    distribution = MOMFDistribution(row_per_cluster=10, n_cols=60, n_features=2, K=2)
 
     ## Choose distances
     if obj == 'cluster':
@@ -229,30 +229,30 @@ if __name__ == "__main__":
     max_triples = 2000
 
     ## Choose models + selectors
-    # model = NormMixtureMFModel(n_rows=distribution.n_rows, 
-    #                            n_cols=distribution.n_cols, 
-    #                            n_features=distribution.n_features, 
-    #                            K=distribution.K,
-    #                            sigma_obs=distribution.sigma_obs,
-    #                            sigma_emb=distribution.sigma_emb,
-    #                            sigma_norm=distribution.sigma_norm,
-    #                            thin=20,
-    #                            burnin=2000)
-
     model = NormMixtureMFModel(n_rows=distribution.n_rows, 
                                n_cols=distribution.n_cols, 
                                n_features=distribution.n_features, 
                                K=distribution.K,
                                sigma_obs=distribution.sigma_obs,
-                               alpha_0=3.0,
-                               beta_0=1.0,
-                               v_0=2.0,
+                               sigma_emb=distribution.sigma_emb,
                                sigma_norm=distribution.sigma_norm,
                                thin=20,
                                burnin=2000)
 
+    # model = NormMixtureMFModel(n_rows=distribution.n_rows, 
+    #                            n_cols=distribution.n_cols, 
+    #                            n_features=distribution.n_features, 
+    #                            K=distribution.K,
+    #                            sigma_obs=distribution.sigma_obs,
+    #                            alpha_0=3.0,
+    #                            beta_0=1.0,
+    #                            v_0=2.0,
+    #                            sigma_norm=distribution.sigma_norm,
+    #                            thin=20,
+    #                            burnin=2000)
+
     eig_selector = EIGNormMOMF(n_samples=n_samples, sigma=distribution.sigma_obs)
-    dbal_selector = DBALNormMOMF(n_samples=n_samples, dist=distance, max_triples=max_triples, dfactor=60.0)
+    dbal_selector = DBALNormMOMF(n_samples=n_samples, dist=distance, max_triples=max_triples, dfactor=1.0)
     var_selector = VarNormMOMF(n_samples=n_samples)
     mps_selector = MPSNormMOMF(n_samples=n_samples, dist=distance, sigma=distribution.sigma_obs)
 
