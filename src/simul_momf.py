@@ -98,7 +98,7 @@ def active_momf(distribution:MOMFDistribution,
     
 
     ## Initialize with 5 points per column
-    reps = 2
+    reps = 5
     ii = np.random.choice(n_rows, size=(reps*n_cols), replace=True)
     jj = np.tile(np.arange(n_cols), reps)
     
